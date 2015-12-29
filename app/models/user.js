@@ -5,7 +5,7 @@ var crypto = require('crypto');
 
 
 var User = db.Model.extend({
-  tableName: 'users'
+  tableName: 'users',
   // username: '',
   // password: ''
 //   initialize: function(){

@@ -25,11 +25,8 @@ app.use(express.static(__dirname + '/public'));
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
-  saveUninitialized: true,
-  cookie: { 
-    secure: true,
-    user: undefined
-  }
+  saveUninitialized: false  
+
 }))
 // app.use(function restrict(req, res, next) {
 //   console.log(req.session.user);
@@ -44,47 +41,34 @@ app.use(session({
 
 
 
-app.get('/', 
+app.get('/', util.checkLoggedIn,
 function(req, res) {
-if(req.session.cookie.user){
-  res.render('index');
-}else{
-  res.redirect('/login');
-}
-
+  res.render('index')
 });
 
-app.get('/login', 
+app.get('/login',
 function(req, res) {
   res.render('login');
 });
 
-app.get('/signup', 
+app.get('/signup',
 function(req, res) {
   res.render('signup');
 });
 
-app.get('/create', 
+app.get('/create', util.checkLoggedIn,
 function(req, res) {
-  if(req.session.cookie.user){
     res.render('index');
-  }else{
-    res.redirect('/login');
-  }
 });
 
-app.get('/links', 
+app.get('/links', util.checkLoggedIn,
 function(req, res) {
-//   if(req.session.cookie.user){
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
-// }else{
-//   res.redirect('/login');
-// }
 });
 
-app.post('/links', 
+app.post('/links', util.checkLoggedIn,
 function(req, res) {
   var uri = req.body.url;
 
@@ -140,17 +124,13 @@ app.post('/signup', function(req, res){
 app.post('/login', function(req, res){
   var username = req.body.username;
   var password = req.body.password;
-
-  db.knex('users').where({ username : username}).then(function(found) {    
+  db.knex('users').where({ username : username}).then(function(found) {   
     if(found.length > 0){
+       req.session.user = username;
        res.redirect('/')
      }else{
-AWQ        res.redirect('/login');
-      }.catch(function(err){
-        console.log(err);
-      });
+        res.redirect('/login');
      }
-    
   });
 });
 
