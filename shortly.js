@@ -75,13 +75,13 @@ function(req, res) {
 
 app.get('/links', 
 function(req, res) {
-  if(req.session.cookie.user){
-}else{
-  res.redirect('/login');
-}
+//   if(req.session.cookie.user){
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
+// }else{
+//   res.redirect('/login');
+// }
 });
 
 app.post('/links', 
@@ -145,8 +145,10 @@ app.post('/login', function(req, res){
     if(found.length > 0){
        res.redirect('/')
      }else{
-        res.redirect('/login');
-
+AWQ        res.redirect('/login');
+      }.catch(function(err){
+        console.log(err);
+      });
      }
     
   });
