@@ -42,9 +42,11 @@ app.use(session({
 // });
 
 
+
+
 app.get('/', 
 function(req, res) {
-  if(req.session.cookie.user){
+if(req.session.cookie.user){
   res.render('index');
 }else{
   res.redirect('/login');
@@ -57,13 +59,26 @@ function(req, res) {
   res.render('login');
 });
 
+app.get('/signup', 
+function(req, res) {
+  res.render('signup');
+});
+
 app.get('/create', 
 function(req, res) {
-  res.render('index');
+  if(req.session.cookie.user){
+    res.render('index');
+  }else{
+    res.redirect('/login');
+  }
 });
 
 app.get('/links', 
 function(req, res) {
+  if(req.session.cookie.user){
+}else{
+  res.redirect('/login');
+}
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -104,9 +119,38 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.post('/signup', function(req, res){
+  var username = req.body.username;
+  var password = req.body.password;
 
+  db.knex('users').where({ username : username}).then(function(found) {    
+    if(found.length > 0){
+       res.redirect('/')
+     }else{
+      new User({ username : username , password: password}).save().then(function(){
+        res.redirect('/');
+      }).catch(function(err){
+        console.log(err);
+      });
+     }
+    
+  });
+});
 
+app.post('/login', function(req, res){
+  var username = req.body.username;
+  var password = req.body.password;
 
+  db.knex('users').where({ username : username}).then(function(found) {    
+    if(found.length > 0){
+       res.redirect('/')
+     }else{
+        res.redirect('/login');
+
+     }
+    
+  });
+});
 
 
 
