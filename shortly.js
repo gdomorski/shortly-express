@@ -28,18 +28,6 @@ app.use(session({
   saveUninitialized: false  
 
 }))
-// app.use(function restrict(req, res, next) {
-//   console.log(req.session.user);
-//   if (req.session.user) {
-//     next();
-//   } else {
-//     req.session.error = 'Access denied!';
-//     res.redirect('/login');
-//   }
-// });
-
-
-
 
 app.get('/', util.checkLoggedIn,
 function(req, res) {
@@ -48,6 +36,7 @@ function(req, res) {
 
 app.get('/login',
 function(req, res) {
+  req.session.user = undefined;
   res.render('login');
 });
 
@@ -124,7 +113,7 @@ app.post('/signup', function(req, res){
 app.post('/login', function(req, res){
   var username = req.body.username;
   var password = req.body.password;
-  db.knex('users').where({ username : username}).then(function(found) {   
+  db.knex('users').where({ username : username , password : password}).then(function(found) {   
     if(found.length > 0){
        req.session.user = username;
        res.redirect('/')
@@ -133,6 +122,7 @@ app.post('/login', function(req, res){
      }
   });
 });
+
 
 
 
