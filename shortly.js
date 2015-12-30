@@ -3,6 +3,10 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var passport = require('passport');
+var GithubStrategy = require('passport-github').Strategy;
+var cookieParser = require('cookie-parser');
+var methodOverride = require('method-override');
 
 
 var db = require('./app/config');
@@ -11,6 +15,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var auth = require('./routes/auth');
 
 var app = express();
 
@@ -22,17 +27,57 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+// app.use(methodOverride());
+app.use(cookieParser());
 app.use(session({
-  secret: 'keyboard cat',
+  secret: 'mysecret',
   resave: false,
-  saveUninitialized: false  
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
-}))
+passport.use(new GithubStrategy({
+  clientID: 'f8925fa5ed776dcc4f69',
+  clientSecret: 'c097eb1febf5723e99e781abf78465deb5e23cc9',
+  callbackURL: 'http://127.0.0.1:4568/auth/callback'
+}, function(accessToken, refreshToken, profile, done){
+  done(null, {
+    accessToken: accessToken,
+    profile: profile
+  });
+}));
+
+
+passport.serializeUser(function(user, done) {
+  // for the time being tou can serialize the user 
+  // object {accessToken: accessToken, profile: profile }
+  // In the real app you might be storing on the id like user.profile.id 
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  // If you are storing the whole user on session we can just pass to the done method, 
+  // But if you are storing the user id you need to query your db and get the user 
+  //object and pass to done() 
+  done(null, user);
+});
+
+
+app.get('/auth', passport.authenticate('github'));
+app.get('/auth/error', auth.error);
+app.get('/auth/callback',
+  passport.authenticate('github', {failureRedirect: '/auth/error'}),
+  auth.callback
+);
+
+
 
 app.get('/', util.checkLoggedIn,
 function(req, res) {
-  res.render('index')
+  res.render('index');
 });
+
 
 app.get('/login',
 function(req, res) {
